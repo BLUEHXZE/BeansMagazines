@@ -1,6 +1,6 @@
 {
-    "ServerPortNumber": server port,
+    "ServerPortNumber": "your server port number",
     "ServerIPAddress": "your server ip address",
-    "ClientPortNumber": server port,
-    "ClientIPAddress": "your client ip address",
+    "ClientPortNumber": "your client port number",
+    "ClientIPAddress": "your client ip address"
 }
