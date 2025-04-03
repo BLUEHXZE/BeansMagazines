@@ -76,33 +76,86 @@ class ServerUDP
         server.Listen();
         Console.WriteLine($"Server is listening on IP: {ip} and port: {port}");
 
-        var handler = await server.AcceptAsync();
-
         while (true)
         {
-            var buffer = new byte[1024];
-            // TODO:[Receive and print a received Message from the client]
-            var received = await handler.ReceiveAsync(buffer, SocketFlags.None);
-            // Convert bytes to string
-            var messageString = Encoding.UTF8.GetString(buffer, 0, received);
-
-            if (messageString != null)
+            var handler = await server.AcceptAsync();
+            Console.WriteLine("Client connected!");
+            try
             {
-                Console.WriteLine("Message from client: {0}", messageString);
+                Console.WriteLine("hi0.25");
+                var buffer = new byte[1024];
 
-                // TODO:[Receive and print Hello]
-                // TODO:[Send Welcome to the client]
-                // TODO:[Receive and print DNSLookup]
-                // TODO:[Query the DNSRecord in Json file]
-                // TODO:[If found Send DNSLookupReply containing the DNSRecord]
-                // TODO:[If not found Send Error]
-                // TODO:[Receive Ack about correct DNSLookupReply from the client]
-                // TODO:[If no further requests receieved send End to the client]
-
-                var response = "Message received";
-                var responseByte = Encoding.UTF8.GetBytes(response);
-                await handler.SendAsync(responseByte, SocketFlags.None);
+                while (true)
+                {
+                    Console.WriteLine("hi0.4");
+                    var received = await handler.ReceiveAsync(buffer, SocketFlags.None);
+                    Console.WriteLine("hi0.5");
+                    if (received == 0)
+                        {
+                            Console.WriteLine("Client disconnected.");
+                            handler.Close();
+                            break;
+                        }
+                    Console.WriteLine("hi");
+                    var messageString = Encoding.UTF8.GetString(buffer, 0, received);
+                    Console.WriteLine($"Received: {messageString}");
+                    Console.WriteLine("hi2");
+                    // Respond to the client
+                    var response = new Message
+                    {
+                        MsgId = 1,
+                        MsgType = MessageType.Welcome,
+                        Content = "Welcome to the server!"
+                    };
+                    var responseBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
+                    await handler.SendAsync(responseBytes, SocketFlags.None);
+                }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine($"Socket exception!!!!!!!!!!!!1: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error handling client: {ex.Message}");
+            }
+            finally
+            {
+                Console.WriteLine("uch!!!!!!!!!!!!!");
+                handler.Close();
             }
         }
+
     }
 }
+
+
+
+        // while (true)
+        // {
+        //     var handler = await server.AcceptAsync();
+
+        //     var buffer = new byte[1024];
+        //     // TODO:[Receive and print a received Message from the client]
+        //     var received = await handler.ReceiveAsync(buffer, SocketFlags.None);
+        //     // Convert bytes to string
+        //     var messageString = Encoding.UTF8.GetString(buffer, 0, received);
+
+        //     if (messageString != null)
+        //     {
+        //         Console.WriteLine("Message from client: {0}", messageString);
+
+        //         // TODO:[Receive and print Hello]
+        //         // TODO:[Send Welcome to the client]
+        //         // TODO:[Receive and print DNSLookup]
+        //         // TODO:[Query the DNSRecord in Json file]
+        //         // TODO:[If found Send DNSLookupReply containing the DNSRecord]
+        //         // TODO:[If not found Send Error]
+        //         // TODO:[Receive Ack about correct DNSLookupReply from the client]
+        //         // TODO:[If no further requests receieved send End to the client]
+
+        //         var response = "Message received";
+        //         var responseByte = Encoding.UTF8.GetBytes(response);
+        //         await handler.SendAsync(responseByte, SocketFlags.None);
+        //     }
+        // }
