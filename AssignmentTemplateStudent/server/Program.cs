@@ -13,9 +13,9 @@ using LibData;
 // ReceiveFrom();
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        ServerUDP.start();
+        await ServerUDP.start();
     }
 }
 
@@ -29,21 +29,43 @@ public class Setting
 
 class ServerUDP
 {
-    static string configFile = "../Setting.json";
-    static string configContent = File.ReadAllText(configFile);
-    static Setting? setting = JsonSerializer.Deserialize<Setting>(configContent);
+    static string configFile = @"../Setting.json";
+    static string dnsRecordsFile = @"DNSrecords.json";
+    static Setting? setting;
+    static List<DNSRecord>? records;
 
-    // TODO: [Read the JSON file and return the list of DNSRecords]
-    static List<DNSRecord>? records = JsonSerializer.Deserialize<List<DNSRecord>>("DNSrecords.json");
-
-    public static async void start()
+    static ServerUDP()
     {
-        // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
-        IPHostEntry ipEntry = await Dns.GetHostEntryAsync(Dns.GetHostName());
-        IPAddress ip = ipEntry.AddressList[1];
+        try
+        {
+            // Read and deserialize Setting.json
+            string configContent = File.ReadAllText(configFile);
+            setting = JsonSerializer.Deserialize<Setting>(configContent);
+            if (setting == null)
+                throw new Exception("Failed to deserialize Setting.json. Ensure it contains valid JSON.");
 
-        IPEndPoint iPEndPoint = new(ip, 1234);
-        
+            // Read and deserialize DNSrecords.json
+            string dnsRecordsContent = File.ReadAllText(dnsRecordsFile);
+            records = JsonSerializer.Deserialize<List<DNSRecord>>(dnsRecordsContent);
+            if (records == null)
+                throw new Exception("Failed to deserialize DNSrecords.json. Ensure it contains valid JSON.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during initialization: {ex.Message}");
+            Environment.Exit(1); // Exit the application if initialization fails
+        }
+    }
+
+    public static async Task start()
+    {
+        // Use the IP address and port from the settings
+        IPAddress ip = IPAddress.Parse(setting?.ServerIPAddress ?? "127.0.0.1");
+        int port = setting?.ServerPortNumber ?? 1234;
+
+        // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
+        IPEndPoint iPEndPoint = new(ip, port);
+
         using Socket server = new(
             iPEndPoint.AddressFamily,
             SocketType.Stream,
@@ -52,7 +74,7 @@ class ServerUDP
 
         server.Bind(iPEndPoint);
         server.Listen();
-        Console.WriteLine("Server is listening op port: 1234");
+        Console.WriteLine($"Server is listening on IP: {ip} and port: {port}");
 
         var handler = await server.AcceptAsync();
 
@@ -67,7 +89,7 @@ class ServerUDP
             if (messageString != null)
             {
                 Console.WriteLine("Message from client: {0}", messageString);
-                
+
                 // TODO:[Receive and print Hello]
                 // TODO:[Send Welcome to the client]
                 // TODO:[Receive and print DNSLookup]
@@ -76,7 +98,7 @@ class ServerUDP
                 // TODO:[If not found Send Error]
                 // TODO:[Receive Ack about correct DNSLookupReply from the client]
                 // TODO:[If no further requests receieved send End to the client]
-                
+
                 var response = "Message received";
                 var responseByte = Encoding.UTF8.GetBytes(response);
                 await handler.SendAsync(responseByte, SocketFlags.None);
