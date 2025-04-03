@@ -1,13 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4KXlkIPP67Y=",
+  "dgSpecHash": "13LPKKAirVI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\tiffa\\Documents\\GitHub\\Networking\\AssignmentTemplateStudent\\server\\server.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\tiffa\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.11\\microsoft.netcore.app.ref.8.0.11.nupkg.sha512",
-    "C:\\Users\\tiffa\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.11\\microsoft.windowsdesktop.app.ref.8.0.11.nupkg.sha512",
-    "C:\\Users\\tiffa\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.11\\microsoft.aspnetcore.app.ref.8.0.11.nupkg.sha512",
-    "C:\\Users\\tiffa\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.11\\microsoft.netcore.app.host.win-x64.8.0.11.nupkg.sha512"
-  ],
+  "projectFilePath": "C:\\Users\\ronan\\OneDrive\\Documenten\\GitHub\\BeansMagazines\\AssignmentTemplateStudent\\server\\server.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }
