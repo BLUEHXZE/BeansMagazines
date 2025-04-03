@@ -36,6 +36,7 @@ class ClientUDP
 
     private static async Task SendMessage(Socket client, Message message)
     {
+        Console.WriteLine("uchhhh");
         try
         {
             Console.WriteLine($"Sending: {message.MsgType} - {message.Content}");
