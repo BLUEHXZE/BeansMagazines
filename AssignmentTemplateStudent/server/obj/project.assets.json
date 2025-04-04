@@ -8,19 +8,19 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\ronan\\.nuget\\packages\\": {}
+    "C:\\Users\\tiffa\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ronan\\Documents\\GitHub\\TheDesignWebFork\\BeansMagazines\\AssignmentTemplateStudent\\server\\server.csproj",
+      "projectUniqueName": "C:\\Users\\tiffa\\Documents\\GitHub\\Networking\\AssignmentTemplateStudent\\server\\server.csproj",
       "projectName": "server",
-      "projectPath": "C:\\Users\\ronan\\Documents\\GitHub\\TheDesignWebFork\\BeansMagazines\\AssignmentTemplateStudent\\server\\server.csproj",
-      "packagesPath": "C:\\Users\\ronan\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ronan\\Documents\\GitHub\\TheDesignWebFork\\BeansMagazines\\AssignmentTemplateStudent\\server\\obj\\",
+      "projectPath": "C:\\Users\\tiffa\\Documents\\GitHub\\Networking\\AssignmentTemplateStudent\\server\\server.csproj",
+      "packagesPath": "C:\\Users\\tiffa\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\tiffa\\Documents\\GitHub\\Networking\\AssignmentTemplateStudent\\server\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\ronan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\tiffa\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -42,8 +42,9 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "direct"
-      }
+        "auditMode": "all"
+      },
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -59,12 +60,30 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.11, 8.0.11]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "version": "[8.0.11, 8.0.11]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.11, 8.0.11]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[8.0.11, 8.0.11]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.402/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

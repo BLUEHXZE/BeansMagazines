@@ -132,6 +132,20 @@ class ClientUDP
         }
     }
 
+    private static async Task SendAck(Socket client, int msgId, EndPoint serverEndPoint)
+    {
+        var ackMessage = new Message
+        {
+            MsgId = msgId,
+            MsgType = MessageType.Ack,
+            Content = $"Acknowledged MsgId: {msgId}"
+        };
+
+        await SendMessage(client, ackMessage, serverEndPoint);
+        Console.WriteLine($"Sent Ack for MsgId: {msgId}");
+        await Task.Delay(2000); // Add a 2-second delay after sending the Ack
+    }
+
     public static async Task start()
     {
         IPAddress serverIp = IPAddress.Parse(setting?.ServerIPAddress ?? "127.0.0.1");
@@ -175,6 +189,11 @@ class ClientUDP
                         {
                             Console.WriteLine($"Server returned error: {response.Content}");
                         }
+                        else if (response.MsgType == MessageType.DNSLookupReply)
+                        {
+                            // Send Ack for DNSLookupReply
+                            await SendAck(client, response.MsgId, serverEndPoint);
+                        }
                         break; // Successfully received response
                     }
                     else
@@ -198,7 +217,7 @@ class ClientUDP
                     break;
                 }
 
-                await Task.Delay(1000); // Delay between messages
+                await Task.Delay(1000); // Delay between sending the next message
             }
         }
         catch (Exception ex)
