@@ -57,105 +57,151 @@ class ServerUDP
         }
     }
 
+    private static async Task SendResponse(Socket server, Message response, EndPoint remoteEP)
+    {
+        try
+        {
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+            var responseBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, options));
+            await Task.Factory.FromAsync(
+                server.BeginSendTo(responseBytes, 0, responseBytes.Length, SocketFlags.None, remoteEP, null, null),
+                server.EndSendTo);
+            Console.WriteLine($"Sent response: {response.MsgType}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending response: {ex.Message}");
+        }
+    }
+
     public static async Task start()
     {
-        // Use the IP address and port from the settings
         IPAddress ip = IPAddress.Parse(setting?.ServerIPAddress ?? "127.0.0.1");
         int port = setting?.ServerPortNumber ?? 1234;
-
-        // TODO: [Create a socket and endpoints and bind it to the server IP address and port number]
         IPEndPoint iPEndPoint = new(ip, port);
 
         using Socket server = new(
-            iPEndPoint.AddressFamily,
-            SocketType.Stream,
-            ProtocolType.Tcp
+            AddressFamily.InterNetwork,
+            SocketType.Dgram,
+            ProtocolType.Udp
         );
 
-        server.Bind(iPEndPoint);
-        server.Listen();
-        Console.WriteLine($"Server is listening on IP: {ip} and port: {port}");
-
-        while (true)
+        try
         {
-            var handler = await server.AcceptAsync();
-            Console.WriteLine("Client connected!");
-            try
-            {
-                Console.WriteLine("hi0.25");
-                var buffer = new byte[1024];
+            server.Bind(iPEndPoint);
+            Console.WriteLine($"Server is listening on IP: {ip} and port: {port}");
 
-                while (true)
+            var buffer = new byte[1024];
+            EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+
+            while (true)
+            {
+                try
                 {
-                    Console.WriteLine("hi0.4");
-                    var received = await handler.ReceiveAsync(buffer, SocketFlags.None);
-                    Console.WriteLine("hi0.5");
-                    if (received == 0)
-                        {
-                            Console.WriteLine("Client disconnected.");
-                            handler.Close();
-                            break;
-                        }
-                    Console.WriteLine("hi");
+                    Array.Clear(buffer, 0, buffer.Length);
+                    Console.WriteLine("\nWaiting for client message...");
+                    
+                    int received = await Task.Factory.FromAsync(
+                        server.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEP, null, null),
+                        ar => server.EndReceiveFrom(ar, ref remoteEP));
+
                     var messageString = Encoding.UTF8.GetString(buffer, 0, received);
-                    Console.WriteLine($"Received: {messageString}");
-                    Console.WriteLine("hi2");
-                    // Respond to the client
-                    var response = new Message
+                    Console.WriteLine($"Received {received} bytes from {remoteEP}");
+
+                    Message? message = null;
+                    try
                     {
-                        MsgId = 1,
-                        MsgType = MessageType.Welcome,
-                        Content = "Welcome to the server!"
-                    };
-                    var responseBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
-                    await handler.SendAsync(responseBytes, SocketFlags.None);
+                        message = JsonSerializer.Deserialize<Message>(messageString);
+                        Console.WriteLine($"Message type: {message?.MsgType}, Content: {message?.Content}");
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Failed to deserialize message: {ex.Message}");
+                        continue;
+                    }
+
+                    if (message == null) continue;
+
+                    Message response;
+                    switch (message.MsgType)
+                    {
+                        case MessageType.Hello:
+                            response = new Message
+                            {
+                                MsgId = message.MsgId,
+                                MsgType = MessageType.Welcome,
+                                Content = "Welcome to the DNS Server!"
+                            };
+                            break;
+
+                        case MessageType.DNSLookup:
+                            var domainName = message.Content?.ToString();
+                            var record = records.FirstOrDefault(r => r.Name.Equals(domainName, StringComparison.OrdinalIgnoreCase));
+                            
+                            if (record != null)
+                            {
+                                response = new Message
+                                {
+                                    MsgId = message.MsgId,
+                                    MsgType = MessageType.DNSLookupReply,
+                                    Content = record
+                                };
+                            }
+                            else
+                            {
+                                response = new Message
+                                {
+                                    MsgId = message.MsgId,
+                                    MsgType = MessageType.Error,
+                                    Content = $"Domain {domainName} not found"
+                                };
+                            }
+                            break;
+
+                        case MessageType.End:
+                            response = new Message
+                            {
+                                MsgId = message.MsgId,
+                                MsgType = MessageType.End,
+                                Content = "Goodbye!"
+                            };
+                            break;
+
+                        default:
+                            response = new Message
+                            {
+                                MsgId = message.MsgId,
+                                MsgType = MessageType.Error,
+                                Content = "Unknown message type"
+                            };
+                            break;
+                    }
+
+                    await Task.Delay(100); // Small delay before sending response
+                    await SendResponse(server, response, remoteEP);
+
+                    if (message.MsgType == MessageType.End)
+                    {
+                        Console.WriteLine($"Client {remoteEP} ended session");
+                    }
+                }
+                catch (SocketException ex)
+                {
+                    Console.WriteLine($"Socket error: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error handling message: {ex.Message}");
                 }
             }
-            catch (SocketException ex)
-            {
-                Console.WriteLine($"Socket exception!!!!!!!!!!!!1: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error handling client: {ex.Message}");
-            }
-            finally
-            {
-                Console.WriteLine("uch!!!!!!!!!!!!!");
-                handler.Close();
-            }
         }
-
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Server error: {ex.Message}");
+        }
     }
 }
-
-
-
-        // while (true)
-        // {
-        //     var handler = await server.AcceptAsync();
-
-        //     var buffer = new byte[1024];
-        //     // TODO:[Receive and print a received Message from the client]
-        //     var received = await handler.ReceiveAsync(buffer, SocketFlags.None);
-        //     // Convert bytes to string
-        //     var messageString = Encoding.UTF8.GetString(buffer, 0, received);
-
-        //     if (messageString != null)
-        //     {
-        //         Console.WriteLine("Message from client: {0}", messageString);
-
-        //         // TODO:[Receive and print Hello]
-        //         // TODO:[Send Welcome to the client]
-        //         // TODO:[Receive and print DNSLookup]
-        //         // TODO:[Query the DNSRecord in Json file]
-        //         // TODO:[If found Send DNSLookupReply containing the DNSRecord]
-        //         // TODO:[If not found Send Error]
-        //         // TODO:[Receive Ack about correct DNSLookupReply from the client]
-        //         // TODO:[If no further requests receieved send End to the client]
-
-        //         var response = "Message received";
-        //         var responseByte = Encoding.UTF8.GetBytes(response);
-        //         await handler.SendAsync(responseByte, SocketFlags.None);
-        //     }
-        // }
