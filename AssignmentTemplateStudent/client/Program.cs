@@ -12,9 +12,9 @@ using LibData;
 // SendTo();
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        ClientUDP.start();
+        await ClientUDP.start();
     }
 }
 
@@ -97,7 +97,7 @@ class ClientUDP
         }
     }
 
-    private static async Task<Message?> ReceiveMessage(Socket client, byte[] buffer, ref EndPoint remoteEP)
+    private static async Task<(Message?, EndPoint)> ReceiveMessage(Socket client, byte[] buffer, EndPoint remoteEP)
     {
         try
         {
@@ -107,28 +107,28 @@ class ClientUDP
                 ar => client.EndReceiveFrom(ar, ref remoteEP));
 
             var received = await receiveTask;
-            if (received == 0) return null;
+            if (received == 0) return (null, remoteEP);
 
             var messageString = Encoding.UTF8.GetString(buffer, 0, received);
             try
             {
-                return JsonSerializer.Deserialize<Message>(messageString);
+                return (JsonSerializer.Deserialize<Message>(messageString), remoteEP);
             }
             catch (JsonException ex)
             {
                 Console.WriteLine($"Failed to deserialize message: {ex.Message}");
-                return null;
+                return (null, remoteEP);
             }
         }
         catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
         {
             Console.WriteLine("Receive timed out.");
-            return null;
+            return (null, remoteEP);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Receive failed: {ex.Message}");
-            return null;
+            return (null, remoteEP);
         }
     }
 
@@ -165,7 +165,8 @@ class ClientUDP
                     await SendMessage(client, message, serverEndPoint);
 
                     client.ReceiveTimeout = 5000; // 5-second timeout
-                    var response = await ReceiveMessage(client, buffer, ref remoteEP);
+                    var (response, updatedRemoteEP) = await ReceiveMessage(client, buffer, remoteEP);
+                    remoteEP = updatedRemoteEP;
 
                     if (response != null)
                     {
